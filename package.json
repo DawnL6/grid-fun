@@ -1,0 +1,28 @@
+{
+  "name": "grid-fun",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": "26.10.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check .",
+    "build:h5": "yarn workspace @grid-fun/game build:h5",
+    "build:mp-weixin": "yarn workspace @grid-fun/game build:mp-weixin",
+    "build:admin": "yarn workspace @grid-fun/admin build",
+    "build:server": "yarn workspace @grid-fun/server build",
+    "test:compatibility": "node tests/compatibility.cjs"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vitest": "~3.2.4",
+    "prettier": "~3.6.2"
+  }
+}

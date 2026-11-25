@@ -1,0 +1,1 @@
+<script lang="ts">export default { onLaunch() {} };</script><style>page {background:#F8F6F0;color:#303D35;}</style>
