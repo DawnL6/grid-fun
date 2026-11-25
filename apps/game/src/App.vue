@@ -1,1 +1,9 @@
-<script lang="ts">export default { onLaunch() {} };</script><style>page {background:#F8F6F0;color:#303D35;}</style>
+<script lang="ts">
+export default { onLaunch() {} };
+</script>
+<style>
+page {
+  background: #f8f6f0;
+  color: #303d35;
+}
+</style>

@@ -7,3 +7,5 @@
 2026-11-25：新增H5/微信小程序最小验证页面、Vue管理后台入口、Fastify健康接口、SQLite兼容验证脚本、统一yarn.lock和构建命令。均为工程验证，不代表游戏或后台业务完成。
 
 2026-11-25：准备首次提交：需求基线、工程初始化及S00-05兼容验证成果。上传状态以实际Git结果为准。
+
+2026-11-25：S00-06：增加eslint.config.mjs、.prettierignore、vitest.config.ts及SQLite集成测试入口；严格检查纳入Vue文件；增加lint/format/verify命令，统一现有源码格式，更新依赖锁文件。

@@ -1,1 +1,8 @@
-{"pages": [{"path": "pages/index/index", "style": {"navigationBarTitleText": "\u683c\u6709\u8da3"}}]}
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": { "navigationBarTitleText": "\u683c\u6709\u8da3" }
+    }
+  ]
+}

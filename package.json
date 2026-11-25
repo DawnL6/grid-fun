@@ -12,17 +12,26 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json && tsc --noEmit -p apps/server/tsconfig.json",
     "format:check": "prettier --check .",
     "build:h5": "yarn workspace @grid-fun/game build:h5",
     "build:mp-weixin": "yarn workspace @grid-fun/game build:mp-weixin",
     "build:admin": "yarn workspace @grid-fun/admin build",
     "build:server": "yarn workspace @grid-fun/server build",
-    "test:compatibility": "node tests/compatibility.cjs"
+    "test:compatibility": "node tests/compatibility.cjs",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "verify": "yarn lint && yarn format:check && yarn typecheck && yarn test"
   },
   "devDependencies": {
+    "@eslint/js": "9",
+    "eslint": "9",
+    "eslint-plugin-vue": "10",
+    "prettier": "~3.6.2",
     "typescript": "~5.9.3",
+    "typescript-eslint": "8",
     "vitest": "~3.2.4",
-    "prettier": "~3.6.2"
+    "vue-eslint-parser": "10",
+    "vue-tsc": "3"
   }
 }

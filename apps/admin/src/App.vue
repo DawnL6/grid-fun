@@ -1,1 +1,6 @@
-<template><el-card><h1>GridFun 管理后台</h1><p>工程兼容验证页面，业务功能尚未开发。</p></el-card></template>
+<template>
+  <el-card>
+    <h1>GridFun 管理后台</h1>
+    <p>工程兼容验证页面，业务功能尚未开发。</p>
+  </el-card>
+</template>

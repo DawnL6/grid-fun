@@ -5,11 +5,14 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": [
     "apps/**/*.ts",
     "packages/**/*.ts",
-    "tests/**/*.ts"
+    "tests/**/*.ts",
+    "apps/**/*.vue",
+    "vitest.config.ts"
   ]
 }

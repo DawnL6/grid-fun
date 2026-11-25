@@ -1,0 +1,9 @@
+node_modules/
+.cache/
+work/
+**/dist/
+yarn.lock
+install.log
+docs/01-product-requirements.md
+docs/02-technical-architecture.md
+docs/03-development-plan.md

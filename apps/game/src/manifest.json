@@ -1,1 +1,7 @@
-{"name": "GridFun", "appid": "", "versionName": "0.0.0", "versionCode": "1", "mp-weixin": {"appid": ""}}
+{
+  "name": "GridFun",
+  "appid": "",
+  "versionName": "0.0.0",
+  "versionCode": "1",
+  "mp-weixin": { "appid": "" }
+}

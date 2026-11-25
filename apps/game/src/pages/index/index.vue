@@ -1,1 +1,6 @@
-<template><view style="padding:32px"><text>格有趣 · 工程兼容验证</text><view>基础页面已加载，游戏功能尚未开发。</view></view></template>
+<template>
+  <view style="padding: 32px">
+    <text>格有趣 · 工程兼容验证</text>
+    <view>基础页面已加载，游戏功能尚未开发。</view>
+  </view>
+</template>
