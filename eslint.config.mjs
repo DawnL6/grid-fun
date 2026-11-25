@@ -9,7 +9,10 @@ export default ts.config(
   {
     files: ["**/*.vue"],
     languageOptions: { parserOptions: { parser: ts.parser } },
-    rules: { "vue/multi-word-component-names": "off" },
+    rules: {
+      "vue/multi-word-component-names": "off",
+      "vue/singleline-html-element-content-newline": "off",
+    },
   },
   {
     files: ["**/*.ts", "**/*.cjs"],

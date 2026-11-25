@@ -23,3 +23,7 @@
 2026-11-25：新增docs/design/core-schema.draft.sql、openapi.draft.json及tests/design.test.ts；完整设计仍未交付。
 
 2026-11-25：补充其余逻辑表草稿、OpenAPI接口目录及运营配置JSON Schema；更新S00-07范围与状态。
+
+2026-11-25：将工程验证页面扩展为10×10触摸探针，S00-08仍未完成。
+
+2026-11-25：新增纯TS棋盘模型及S01-01测试；阶段00外部依赖延后标记。
