@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GridFun operating configuration draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "energy", "rewards", "hints", "ads"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "energy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "naturalCap", "hardCap", "restoreMinutes"],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "naturalCap": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 30
+        },
+        "hardCap": {
+          "type": "integer",
+          "minimum": 30,
+          "default": 300
+        },
+        "restoreMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 5
+        }
+      }
+    },
+    "rewards": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classicFirstCoins": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 20
+        },
+        "newStarCoins": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 5
+        },
+        "dailyFirstCoins": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 50
+        },
+        "freeFirstCoins": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        }
+      }
+    },
+    "hints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dailyFree": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "coinPrice": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 30
+        }
+      }
+    },
+    "ads": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": ["MOCK", "DISABLED", "LIVE"],
+          "default": "DISABLED"
+        },
+        "completionMinutes": {
+          "type": "integer",
+          "const": 30
+        },
+        "claimHours": {
+          "type": "integer",
+          "const": 24
+        },
+        "globalDailyLimit": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 20
+        }
+      }
+    }
+  }
+}

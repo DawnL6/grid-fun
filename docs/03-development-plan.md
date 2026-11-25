@@ -34,7 +34,7 @@
 | S00-04 | 待开始 | 创建 Git 私有仓库、Monorepo、Yarn Workspaces | game/admin/server/core/shared/assets 目录及 lockfile |
 | S00-05 | 基础兼容验证通过，待验收（见06测试报告） | 依赖、Node、uni-app、SQLite Docker 兼容验证 | H5、mp-weixin、Admin、Server 可构建/启动 |
 | S00-06 | 检查通过，待验收 | ESLint、Prettier、TS strict、Vitest | 统一检查命令可执行 |
-| S00-07 | 待开始 | 详细数据库、接口、配置及业务口径设计 | DDL/迁移方案、OpenAPI 草稿、未决事项确认 |
+| S00-07 | 设计草稿与核心约束验证完成，待验收 | 详细数据库、接口、配置及业务口径设计 | DDL/迁移方案、OpenAPI 草稿、未决事项确认 |
 | S00-08 | 待开始 | 微信平台能力最小验证 | 真机 View 棋盘、触摸、登录/广告接口可行性（权限允许范围） |
 | S00-09 | 待开始 | 环境配置、密钥、测试数据隔离 | .env.example，无真实密钥入库 |
 
