@@ -12,6 +12,7 @@ export default ts.config(
     rules: {
       "vue/multi-word-component-names": "off",
       "vue/singleline-html-element-content-newline": "off",
+      "vue/max-attributes-per-line": "off",
     },
   },
   {

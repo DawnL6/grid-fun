@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-const props = defineProps<{ regions: number[][]; selected?: number }>();
+const props = defineProps<{ regions: number[][]; cells: readonly string[] }>();
 const emit = defineEmits<{ select: [index: number] }>();
 const colors = [
   "#B8D5A3",
@@ -15,7 +15,7 @@ const colors = [
   "#C5C9A0",
 ];
 const size = computed(() => props.regions.length);
-const cells = computed(() =>
+const items = computed(() =>
   props.regions.flatMap((row, r) =>
     row.map((region, c) => ({
       index: r * size.value + c,
@@ -43,13 +43,14 @@ function style(cell: { region: number; row: number; column: number }) {
 <template>
   <view class="board">
     <view
-      v-for="cell in cells"
+      v-for="cell in items"
       :key="cell.index"
       class="cell"
       :style="style(cell)"
       @tap="emit('select', cell.index)"
     >
-      <text v-if="selected === cell.index">★</text>
+      <text v-if="cells[cell.index] === 'target'">★</text>
+      <text v-else-if="cells[cell.index] === 'excluded'">×</text>
     </view>
   </view>
 </template>
