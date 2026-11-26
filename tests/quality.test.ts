@@ -135,3 +135,44 @@ describe("large-board smoke batches", () => {
     },
   );
 });
+
+describe("expanded large-board batches", () => {
+  it.each([7, 8, 9, 10] as const)(
+    "measures %ix%i over 500 attempts",
+    (size) => {
+      let seed = 135791113 + size;
+      const random = () => {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      const started = Date.now();
+      const report = generateValidated({
+        size,
+        maxAttempts: 500,
+        deadlineMs: started + 30000,
+        now: Date.now,
+        random,
+      });
+      expect(
+        report.accepted.length +
+          report.rejectedMultiple +
+          report.rejectedNoSolution +
+          report.rejectedDuplicate +
+          report.rejectedBudget,
+      ).toBe(report.attempted);
+      console.info(
+        `S01-11 expanded ${size}x${size}`,
+        JSON.stringify({
+          attempted: report.attempted,
+          accepted: report.accepted.length,
+          multiple: report.rejectedMultiple,
+          noSolution: report.rejectedNoSolution,
+          duplicate: report.rejectedDuplicate,
+          budget: report.rejectedBudget,
+          stopped: report.stopped,
+          elapsedMs: Date.now() - started,
+        }),
+      );
+    },
+  );
+});
