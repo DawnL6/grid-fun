@@ -60,3 +60,78 @@ describe("small deterministic batch", () => {
     );
   });
 });
+
+describe("larger deterministic batches", () => {
+  it.each([5, 6] as const)("reports %ix%i candidate yield", (size) => {
+    let seed = 987654321 + size;
+    const random = () => {
+      seed = (1664525 * seed + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const started = Date.now();
+    const report = generateValidated({
+      size,
+      maxAttempts: 100,
+      deadlineMs: started + 30000,
+      now: Date.now,
+      random,
+    });
+    expect(report.attempted).toBe(100);
+    expect(
+      report.accepted.length +
+        report.rejectedMultiple +
+        report.rejectedNoSolution +
+        report.rejectedDuplicate,
+    ).toBe(100);
+    console.info(
+      `S01-11 ${size}x${size} batch`,
+      JSON.stringify({
+        attempted: 100,
+        accepted: report.accepted.length,
+        multiple: report.rejectedMultiple,
+        noSolution: report.rejectedNoSolution,
+        duplicate: report.rejectedDuplicate,
+        elapsedMs: Date.now() - started,
+      }),
+    );
+  });
+});
+
+describe("large-board smoke batches", () => {
+  it.each([7, 8, 9, 10] as const)(
+    "reports %ix%i yield without relaxing checks",
+    (size) => {
+      let seed = 246813579 + size;
+      const random = () => {
+        seed = (1664525 * seed + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      const started = Date.now();
+      const report = generateValidated({
+        size,
+        maxAttempts: 20,
+        deadlineMs: started + 30000,
+        now: Date.now,
+        random,
+      });
+      expect(
+        report.accepted.length +
+          report.rejectedMultiple +
+          report.rejectedNoSolution +
+          report.rejectedDuplicate,
+      ).toBe(report.attempted);
+      console.info(
+        `S01-11 ${size}x${size} batch`,
+        JSON.stringify({
+          attempted: report.attempted,
+          accepted: report.accepted.length,
+          multiple: report.rejectedMultiple,
+          noSolution: report.rejectedNoSolution,
+          duplicate: report.rejectedDuplicate,
+          stopped: report.stopped,
+          elapsedMs: Date.now() - started,
+        }),
+      );
+    },
+  );
+});
