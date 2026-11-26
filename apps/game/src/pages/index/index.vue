@@ -64,6 +64,44 @@ declare const uni: {
 };
 const SAVE_KEY = "gridfun:probe-save:v1";
 const BEST_KEY = "gridfun:sample-best:v1";
+const TUTORIAL_KEY = "gridfun:tutorial-complete:v1";
+const tutorialSteps = [
+  { instruction: "点击第一行第三格，放下一颗星。", action: "target", index: 2 },
+  {
+    instruction: "每行只能有一颗星。再点第一行第一格，观察冲突框。",
+    action: "target",
+    index: 0,
+  },
+  { instruction: "点击撤销，移走冲突的星。", action: "undo" },
+  {
+    instruction: "每列也只能有一颗星。点第四行第三格。",
+    action: "target",
+    index: 14,
+  },
+  { instruction: "点击撤销，移走同列的星。", action: "undo" },
+  {
+    instruction: "每个彩色区域只能有一颗星。点第三行第一格。",
+    action: "target",
+    index: 8,
+  },
+  { instruction: "点击撤销，移走同区域的星。", action: "undo" },
+  {
+    instruction: "星星之间不能相邻，斜角也算。点第二行第四格。",
+    action: "target",
+    index: 7,
+  },
+  { instruction: "点击撤销，移走相邻的星。", action: "undo" },
+  {
+    instruction: "点第一行第二格，体验排除标记。",
+    action: "excluded",
+    index: 1,
+  },
+  { instruction: "点击撤销，清除刚才的排除标记。", action: "undo" },
+  { instruction: "体验免费教学提示：它只指出一个正确位置。", action: "hint" },
+] as const;
+const tutorialStep = ref(-1);
+const tutorialMessage = ref("");
+const tutorial = computed(() => tutorialStep.value >= 0);
 const sampleRules = {
   maxStars: 3 as const,
   ruleVersion: 1,
@@ -148,6 +186,39 @@ function resetAttempt() {
   nowMs.value = activeSince;
   confirmReset.value = false;
 }
+function beginTutorial() {
+  size.value = 4;
+  resetAttempt();
+  tool.value = "target";
+  cycle.value = false;
+  showAuto.value = false;
+  showConflicts.value = true;
+  tutorialMessage.value = "";
+  tutorialStep.value = 0;
+}
+function endTutorial() {
+  tutorialStep.value = -1;
+  tutorialMessage.value = "";
+  showAuto.value = true;
+  resetAttempt();
+  uni.setStorageSync(TUTORIAL_KEY, true);
+}
+function tutorialUndo() {
+  if (tutorial.value && tutorialSteps[tutorialStep.value]?.action !== "undo") {
+    tutorialMessage.value = "先完成上方提示的操作。";
+    return;
+  }
+  state.value = undo(state.value);
+  if (tutorial.value) {
+    tutorialStep.value++;
+    tutorialMessage.value = "";
+  }
+}
+function tutorialHint() {
+  if (tutorialSteps[tutorialStep.value]?.action !== "hint") return;
+  tutorialStep.value++;
+  tutorialMessage.value = "提示：第二行第一格可以放星。教学提示不消耗权益。";
+}
 onMounted(() => {
   const best = uni.getStorageSync(BEST_KEY);
   if (
@@ -158,6 +229,7 @@ onMounted(() => {
   )
     bestStars.value = best;
   restoreLocal();
+  if (uni.getStorageSync(TUTORIAL_KEY) !== true) beginTutorial();
   timer = setInterval(() => {
     if (!paused.value) nowMs.value = Date.now();
   }, 250);
@@ -191,6 +263,7 @@ onHide(() => {
   saveLocal();
 });
 function change(next: BoardSize) {
+  if (tutorial.value) return;
   size.value = next;
   state.value = newGame(board.value);
   settled.value = false;
@@ -205,19 +278,19 @@ let gestureCells = new Set<number>();
 let dragging = false;
 let suppressTap = false;
 function dragStart(index: number) {
-  if (paused.value || settled.value) return;
+  if (tutorial.value || paused.value || settled.value) return;
   gestureStart = index;
   gestureCells = new Set([index]);
   dragging = false;
 }
 function dragMove(index: number) {
-  if (paused.value || settled.value) return;
+  if (tutorial.value || paused.value || settled.value) return;
   if (tool.value !== "excluded" || cycle.value || gestureStart < 0) return;
   if (index !== gestureStart) dragging = true;
   gestureCells.add(index);
 }
 function dragEnd() {
-  if (paused.value || settled.value) return;
+  if (tutorial.value || paused.value || settled.value) return;
   if (dragging && tool.value === "excluded" && !cycle.value) {
     const first = state.value.cells[gestureStart];
     const next: CellState = first === "excluded" ? "empty" : "excluded";
@@ -241,6 +314,26 @@ function dragEnd() {
 }
 function select(index: number) {
   if (paused.value || settled.value) return;
+  if (tutorial.value) {
+    const step = tutorialSteps[tutorialStep.value];
+    if (
+      !step ||
+      (step.action !== "target" && step.action !== "excluded") ||
+      step.index !== index
+    ) {
+      tutorialMessage.value = "请按教学提示点击指定格子。";
+      return;
+    }
+    state.value = applyOperation(board.value, state.value, [
+      {
+        position: { row: Math.floor(index / 4), column: index % 4 },
+        state: step.action,
+      },
+    ]);
+    tutorialStep.value++;
+    tutorialMessage.value = "";
+    return;
+  }
   if (suppressTap) {
     suppressTap = false;
     return;
@@ -269,7 +362,41 @@ function select(index: number) {
 <template>
   <view class="probe">
     <text class="title">格有趣 · 操作验证</text>
-    <view class="toolbar">
+    <view v-if="tutorial" class="tutorial-card">
+      <text class="tutorial-title"
+        >新手教学 {{ Math.min(tutorialStep + 1, tutorialSteps.length + 1) }}/{{
+          tutorialSteps.length + 1
+        }}</text
+      >
+      <text v-if="tutorialStep < tutorialSteps.length">{{
+        tutorialSteps[tutorialStep].instruction
+      }}</text>
+      <text v-else>规则体验完成。现在清空练习棋盘，独立完成这道题。</text>
+      <text v-if="tutorialMessage" class="tutorial-error">{{
+        tutorialMessage
+      }}</text>
+      <view
+        v-if="tutorialSteps[tutorialStep]?.action === 'undo'"
+        class="button"
+        @tap="tutorialUndo"
+        >撤销上一步</view
+      >
+      <view
+        v-if="tutorialSteps[tutorialStep]?.action === 'hint'"
+        class="button"
+        @tap="tutorialHint"
+        >查看单步提示</view
+      >
+      <view
+        v-if="tutorialStep >= tutorialSteps.length"
+        class="button active"
+        @tap="endTutorial"
+        >开始独立挑战</view
+      >
+      <view class="button" @tap="endTutorial">跳过教学</view>
+    </view>
+    <view v-else class="toolbar">
+      <view class="button" @tap="beginTutorial">新手教学</view>
       <view
         class="button"
         :class="{ active: tool === 'target' && !cycle }"
@@ -291,15 +418,13 @@ function select(index: number) {
       <view class="button" :class="{ active: cycle }" @tap="cycle = !cycle"
         >单击循环</view
       >
-      <view v-if="!settled" class="button" @tap="state = undo(state)"
-        >撤销</view
-      >
+      <view v-if="!settled" class="button" @tap="tutorialUndo">撤销</view>
       <view v-if="!settled" class="button" @tap="paused ? resume() : pause()">{{
         paused ? "继续" : "暂停"
       }}</view>
       <view class="button" @tap="confirmReset = true">重置</view>
     </view>
-    <view class="sizes"
+    <view v-if="!tutorial" class="sizes"
       ><view
         v-for="n in [4, 5, 6, 7, 8, 9, 10]"
         :key="n"
@@ -321,7 +446,7 @@ function select(index: number) {
       @drag-move="dragMove"
       @drag-end="dragEnd"
     />
-    <view class="toolbar"
+    <view v-if="!tutorial" class="toolbar"
       ><view class="button" @tap="showAuto = !showAuto"
         >自动排除：{{ showAuto ? "开" : "关" }}</view
       ><view class="button" @tap="showConflicts = !showConflicts"
@@ -333,7 +458,9 @@ function select(index: number) {
       <view class="button" @tap="resetAttempt">确认重置</view>
       <view class="button" @tap="confirmReset = false">取消</view>
     </view>
-    <text>耗时：{{ elapsedSeconds }}秒 错误：{{ state.errors }}</text>
+    <text v-if="!tutorial"
+      >耗时：{{ elapsedSeconds }}秒 错误：{{ state.errors }}</text
+    >
     <view v-if="settlement && size === 4" class="result">
       <text class="result-title">完成体验题 · {{ settlement.stars }} 星</text>
       <text>完成关卡：达成 · 1 星</text>
@@ -410,5 +537,21 @@ function select(index: number) {
 .result-title {
   font-size: 20px;
   font-weight: bold;
+}
+.tutorial-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #78966f;
+  border-radius: 8px;
+  background: #f2f6ee;
+}
+.tutorial-title {
+  font-weight: bold;
+}
+.tutorial-error {
+  color: #b34545;
 }
 </style>
