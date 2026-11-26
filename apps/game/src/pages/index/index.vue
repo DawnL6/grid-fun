@@ -15,12 +15,26 @@ import {
   type CellState,
 } from "../../../../../packages/core/src/game";
 import { findConflicts } from "../../../../../packages/core/src/rules";
+import { isComplete } from "../../../../../packages/core/src/rules";
+import {
+  evaluateStars,
+  type StarResult,
+} from "../../../../../packages/core/src/evaluation";
 const size = ref<BoardSize>(4),
   tool = ref<"target" | "excluded">("target"),
   cycle = ref(false);
 const board = computed(() =>
   createBoard(
-    Array.from({ length: size.value }, (_, row) => Array(size.value).fill(row)),
+    size.value === 4
+      ? [
+          [0, 1, 1, 3],
+          [0, 1, 3, 3],
+          [1, 1, 1, 3],
+          [2, 2, 3, 3],
+        ]
+      : Array.from({ length: size.value }, (_, row) =>
+          Array(size.value).fill(row),
+        ),
   ),
 );
 const state = ref<GameState>(newGame(board.value));
@@ -49,7 +63,30 @@ declare const uni: {
   getStorageSync: (key: string) => unknown;
 };
 const SAVE_KEY = "gridfun:probe-save:v1";
+const BEST_KEY = "gridfun:sample-best:v1";
+const sampleRules = {
+  maxStars: 3 as const,
+  ruleVersion: 1,
+  starRules: [
+    { type: "completion" as const, stars: 1 as const },
+    {
+      type: "duration" as const,
+      operator: "lte" as const,
+      value: 120,
+      stars: 1 as const,
+    },
+    {
+      type: "errorCount" as const,
+      operator: "lte" as const,
+      value: 2,
+      stars: 1 as const,
+    },
+  ],
+};
 const paused = ref(false);
+const settled = ref(false);
+const settlement = ref<StarResult | null>(null);
+const bestStars = ref(0);
 const confirmReset = ref(false);
 const activeMs = ref(0);
 const nowMs = ref(Date.now());
@@ -57,16 +94,18 @@ let activeSince = Date.now();
 let timer: ReturnType<typeof setInterval> | undefined;
 const elapsedSeconds = computed(() =>
   Math.floor(
-    (activeMs.value + (paused.value ? 0 : nowMs.value - activeSince)) / 1000,
+    (activeMs.value +
+      (paused.value || settled.value ? 0 : nowMs.value - activeSince)) /
+      1000,
   ),
 );
 function pause() {
-  if (paused.value) return;
+  if (paused.value || settled.value) return;
   activeMs.value += Date.now() - activeSince;
   paused.value = true;
 }
 function resume() {
-  if (!paused.value) return;
+  if (!paused.value || settled.value) return;
   activeSince = Date.now();
   nowMs.value = activeSince;
   paused.value = false;
@@ -75,7 +114,9 @@ function saveLocal() {
   uni.setStorageSync(SAVE_KEY, {
     size: size.value,
     state: state.value,
-    activeMs: activeMs.value + (paused.value ? 0 : Date.now() - activeSince),
+    activeMs:
+      activeMs.value +
+      (paused.value || settled.value ? 0 : Date.now() - activeSince),
     savedAt: Date.now(),
   });
 }
@@ -99,12 +140,23 @@ function restoreLocal() {
 }
 function resetAttempt() {
   state.value = newGame(board.value);
+  settled.value = false;
+  settlement.value = null;
+  paused.value = false;
   activeMs.value = 0;
   activeSince = Date.now();
   nowMs.value = activeSince;
   confirmReset.value = false;
 }
 onMounted(() => {
+  const best = uni.getStorageSync(BEST_KEY);
+  if (
+    typeof best === "number" &&
+    Number.isInteger(best) &&
+    best >= 0 &&
+    best <= 3
+  )
+    bestStars.value = best;
   restoreLocal();
   timer = setInterval(() => {
     if (!paused.value) nowMs.value = Date.now();
@@ -113,7 +165,27 @@ onMounted(() => {
 onUnmounted(() => {
   if (timer) clearInterval(timer);
 });
-watch([size, state, paused], saveLocal);
+watch(state, () => {
+  if (size.value !== 4 || settled.value) return;
+  const positions = state.value.cells.flatMap((value, index) =>
+    value === "target"
+      ? [{ row: Math.floor(index / 4), column: index % 4 }]
+      : [],
+  );
+  if (!isComplete(board.value, positions)) return;
+  activeMs.value += paused.value ? 0 : Date.now() - activeSince;
+  settled.value = true;
+  settlement.value = evaluateStars(sampleRules, {
+    completed: true,
+    durationSeconds: Math.floor(activeMs.value / 1000),
+    errorCount: state.value.errors,
+  });
+  if (settlement.value.stars > bestStars.value) {
+    bestStars.value = settlement.value.stars;
+    uni.setStorageSync(BEST_KEY, bestStars.value);
+  }
+});
+watch([size, state, paused, settled], saveLocal);
 onHide(() => {
   pause();
   saveLocal();
@@ -121,6 +193,9 @@ onHide(() => {
 function change(next: BoardSize) {
   size.value = next;
   state.value = newGame(board.value);
+  settled.value = false;
+  settlement.value = null;
+  paused.value = false;
   activeMs.value = 0;
   activeSince = Date.now();
   nowMs.value = activeSince;
@@ -130,19 +205,19 @@ let gestureCells = new Set<number>();
 let dragging = false;
 let suppressTap = false;
 function dragStart(index: number) {
-  if (paused.value) return;
+  if (paused.value || settled.value) return;
   gestureStart = index;
   gestureCells = new Set([index]);
   dragging = false;
 }
 function dragMove(index: number) {
-  if (paused.value) return;
+  if (paused.value || settled.value) return;
   if (tool.value !== "excluded" || cycle.value || gestureStart < 0) return;
   if (index !== gestureStart) dragging = true;
   gestureCells.add(index);
 }
 function dragEnd() {
-  if (paused.value) return;
+  if (paused.value || settled.value) return;
   if (dragging && tool.value === "excluded" && !cycle.value) {
     const first = state.value.cells[gestureStart];
     const next: CellState = first === "excluded" ? "empty" : "excluded";
@@ -165,7 +240,7 @@ function dragEnd() {
   dragging = false;
 }
 function select(index: number) {
-  if (paused.value) return;
+  if (paused.value || settled.value) return;
   if (suppressTap) {
     suppressTap = false;
     return;
@@ -216,8 +291,10 @@ function select(index: number) {
       <view class="button" :class="{ active: cycle }" @tap="cycle = !cycle"
         >单击循环</view
       >
-      <view class="button" @tap="state = undo(state)">撤销</view>
-      <view class="button" @tap="paused ? resume() : pause()">{{
+      <view v-if="!settled" class="button" @tap="state = undo(state)"
+        >撤销</view
+      >
+      <view v-if="!settled" class="button" @tap="paused ? resume() : pause()">{{
         paused ? "继续" : "暂停"
       }}</view>
       <view class="button" @tap="confirmReset = true">重置</view>
@@ -257,7 +334,26 @@ function select(index: number) {
       <view class="button" @tap="confirmReset = false">取消</view>
     </view>
     <text>耗时：{{ elapsedSeconds }}秒 错误：{{ state.errors }}</text>
-    <text class="note">工程操作验证；尚未接入正式关卡或存档。</text>
+    <view v-if="settlement && size === 4" class="result">
+      <text class="result-title">完成体验题 · {{ settlement.stars }} 星</text>
+      <text>完成关卡：达成 · 1 星</text>
+      <text
+        >120 秒内：{{ settlement.rules[1].achieved ? "达成" : "未达成" }} ·
+        {{ elapsedSeconds }} 秒</text
+      >
+      <text
+        >错误不超过 2 次：{{
+          settlement.rules[2].achieved ? "达成" : "未达成"
+        }}
+        · {{ state.errors }} 次</text
+      >
+      <text>本机体验题最高：{{ bestStars }} 星</text>
+      <view class="button" @tap="resetAttempt">再玩一次</view>
+    </view>
+    <text class="note"
+      >4×4
+      为唯一解体验题，星级阈值仅用于演示；其他尺寸为操作预览。正式关卡、服务端成绩及下一关尚未接入。</text
+    >
   </view>
 </template>
 <style scoped>
@@ -300,5 +396,19 @@ function select(index: number) {
   color: #7f897d;
   font-size: 12px;
   margin-top: 8px;
+}
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  border: 1px solid #78966f;
+  border-radius: 8px;
+  background: #f2f6ee;
+}
+.result-title {
+  font-size: 20px;
+  font-weight: bold;
 }
 </style>
