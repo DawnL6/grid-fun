@@ -16,6 +16,7 @@ export type GenerationReport = Readonly<{
   rejectedMultiple: number;
   rejectedNoSolution: number;
   rejectedDuplicate: number;
+  rejectedBudget: number;
   stopped: "attempt-limit" | "timeout" | "cancelled";
 }>;
 export function generateValidated(
@@ -33,7 +34,8 @@ export function generateValidated(
   let attempted = 0,
     rejectedMultiple = 0,
     rejectedNoSolution = 0,
-    rejectedDuplicate = 0;
+    rejectedDuplicate = 0,
+    rejectedBudget = 0;
   let stopped: GenerationReport["stopped"] = "attempt-limit";
   while (attempted < options.maxAttempts) {
     if (options.cancelled?.()) {
@@ -52,7 +54,16 @@ export function generateValidated(
       continue;
     }
     seen.add(key);
-    const result = solve(candidate.board);
+    const result = solve(candidate.board, {
+      deadlineMs: options.deadlineMs,
+      now,
+      cancelled: options.cancelled,
+      maxNodes: 100000,
+    });
+    if (!result.exhaustive) {
+      rejectedBudget++;
+      continue;
+    }
     if (result.count === 0) rejectedNoSolution++;
     else if (result.count === 2) rejectedMultiple++;
     else accepted.push(candidate);
@@ -63,6 +74,7 @@ export function generateValidated(
     rejectedMultiple,
     rejectedNoSolution,
     rejectedDuplicate,
+    rejectedBudget,
     stopped,
   };
 }

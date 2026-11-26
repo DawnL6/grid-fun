@@ -15,7 +15,11 @@ describe("solution counter", () => {
       [2, 3, 1, 0],
       [2, 3, 1, 0],
     ]);
-    expect(solve(board)).toEqual({ count: 0, first: null });
+    expect(solve(board)).toMatchObject({
+      count: 0,
+      first: null,
+      exhaustive: true,
+    });
   });
   it("returns the one valid solution", () => {
     const board = createBoard([
@@ -28,4 +32,14 @@ describe("solution counter", () => {
     expect(result.count).toBe(1);
     expect(isComplete(board, result.first!)).toBe(true);
   });
+});
+
+describe("search budget", () => {
+  it("never treats a partial search as proof of uniqueness", () => {
+    const result = solve(rowBoard, { maxNodes: 1 });
+    expect(result.exhaustive).toBe(false);
+    expect(result.visited).toBe(1);
+  });
+  it("stops when cancelled", () =>
+    expect(solve(rowBoard, { cancelled: () => true }).exhaustive).toBe(false));
 });
