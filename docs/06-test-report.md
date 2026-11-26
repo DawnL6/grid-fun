@@ -84,3 +84,5 @@
 2026-11-26：S02-08体验题结算：首次统一检查因Vue属性顺序的2条lint警告退出1，修复后 `yarn run verify` 退出0，12文件59测试通过；`yarn build:mp-weixin` 退出0。既有求解器测试验证4×4样本唯一解，星级处理器已有5项测试。新增页面通关流程只通过类型、格式、lint和构建，尚未在开发者工具及真机实际操作验证。本次按用户要求未运行H5构建。
 
 2026-11-26：S02-09新手教学：`yarn run verify` 退出0，12文件59测试通过；`yarn build:mp-weixin` 退出0。构建显示未配置DCloud AppID导致uni统计不可用，不影响本次编译。教学各步点击、撤销、首次启动、跳过、重开及独立挑战尚未进行开发者工具/真机人工验收。本次未运行H5构建。
+
+2026-11-26：S03-01：首次安装 `@fastify/swagger` 使用配置镜像失败（`registry.npmmirror.com` 无法解析），改官方npm源安装成功。首次服务端测试因OpenAPI生成路径为`/health`而断言`/api/v1/health`失败，修正断言后 `yarn run verify` 退出0，13文件61测试通过；`yarn build:server` 退出0。集成测试通过Fastify注入验证健康检查、请求ID、自动OpenAPI、无效参数400及不存在路径404；未进行外部HTTP或生产环境测试。
