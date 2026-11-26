@@ -27,6 +27,8 @@ export default ts.config(
         require: "readonly",
         uni: "readonly",
         setTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
         TouchEvent: "readonly",
       },
     },
