@@ -37,9 +37,32 @@ export function generateCandidate(
     return false;
   };
   if (!search(0)) throw new Error("no target layout found");
-  const board = createBoard(
-    Array.from({ length: size }, (_, row) => Array(size).fill(row)),
-  );
+  const regions = Array.from({ length: size }, () => Array(size).fill(-1));
+  const frontier: { row: number; column: number; region: number }[] = [];
+  for (let row = 0; row < size; row++) regions[row][columns[row]] = row;
+  const neighbors = (row: number, column: number) =>
+    [
+      [row - 1, column],
+      [row + 1, column],
+      [row, column - 1],
+      [row, column + 1],
+    ].filter(([r, c]) => r >= 0 && c >= 0 && r < size && c < size);
+  for (let row = 0; row < size; row++)
+    for (const [r, c] of neighbors(row, columns[row]))
+      frontier.push({ row: r, column: c, region: row });
+  while (frontier.length) {
+    const value = random();
+    if (!Number.isFinite(value) || value < 0 || value >= 1)
+      throw new Error("random must return [0,1)");
+    const index = Math.floor(value * frontier.length);
+    const next = frontier.splice(index, 1)[0];
+    if (regions[next.row][next.column] !== -1) continue;
+    regions[next.row][next.column] = next.region;
+    for (const [r, c] of neighbors(next.row, next.column))
+      if (regions[r][c] === -1)
+        frontier.push({ row: r, column: c, region: next.region });
+  }
+  const board = createBoard(regions);
   const solution = columns.map((column, row) => ({ row, column }));
   if (!isComplete(board, solution))
     throw new Error("candidate validation failed");
