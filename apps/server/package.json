@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "db:migrate": "node dist/db/cli.js migrate",
+    "db:seed:dev": "node dist/db/cli.js seed-dev"
   },
   "dependencies": {
     "@fastify/swagger": "^9",
