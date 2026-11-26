@@ -1,42 +1,37 @@
 <script setup lang="ts">
-import { ref } from "vue";
-const size = 10;
+import { ref, computed } from "vue";
+import GameBoard from "../../components/GameBoard.vue";
+const size = ref(10);
 const selected = ref(-1);
-const touched = ref(-1);
-const cells = Array.from({ length: size * size }, (_, i) => ({
-  id: i,
-  region: Math.floor(i / size),
-  shade: i % 2 ? "#EBC69C" : "#B8D5A3",
-}));
-function select(i: number) {
-  selected.value = i;
-}
-function touch(i: number) {
-  touched.value = i;
+const regions = computed(() =>
+  Array.from({ length: size.value }, (_, row) => Array(size.value).fill(row)),
+);
+function change(next: number) {
+  size.value = next;
+  selected.value = -1;
 }
 </script>
 <template>
   <view class="probe">
-    <text class="title"> 格有趣 · 平台触摸验证 </text>
-    <view class="board">
+    <text class="title">格有趣 · 棋盘组件验证</text>
+    <view class="sizes">
       <view
-        v-for="cell in cells"
-        :key="cell.id"
-        class="cell"
-        :style="{
-          backgroundColor: cell.shade,
-          borderBottomWidth:
-            cell.id < 90 && cells[cell.id + 10]?.region !== cell.region
-              ? '3px'
-              : '1px',
-        }"
-        @tap="select(cell.id)"
-        @touchstart="touch(cell.id)"
+        v-for="n in [4, 5, 6, 7, 8, 9, 10]"
+        :key="n"
+        class="size"
+        :class="{ active: size === n }"
+        @tap="change(n)"
       >
-        <text v-if="selected === cell.id"> ★ </text>
+        {{ n }}×{{ n }}
       </view>
     </view>
-    <text>点击格：{{ selected }} 触摸开始格：{{ touched }}</text>
+    <GameBoard
+      :regions="regions"
+      :selected="selected"
+      @select="selected = $event"
+    />
+    <text>当前：{{ size }}×{{ size }} 点击格：{{ selected }}</text>
+    <text class="note">工程组件验证，尚未接入正式关卡。</text>
   </view>
 </template>
 <style scoped>
@@ -48,20 +43,25 @@ function touch(i: number) {
   display: block;
   margin-bottom: 12px;
 }
-.board {
+.sizes {
   display: flex;
   flex-wrap: wrap;
-  width: 100%;
-  max-width: 500px;
+  margin-bottom: 12px;
 }
-.cell {
-  box-sizing: border-box;
-  width: 10%;
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #303d35;
-  border-bottom-style: solid;
+.size {
+  padding: 6px 8px;
+  margin: 2px;
+  border: 1px solid #78966f;
+  border-radius: 6px;
+}
+.active {
+  background: #78966f;
+  color: white;
+}
+.note {
+  display: block;
+  color: #7f897d;
+  font-size: 12px;
+  margin-top: 8px;
 }
 </style>
