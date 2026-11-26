@@ -11,6 +11,10 @@ if (action === "seed-dev" && process.env.NODE_ENV === "production") {
 }
 const database = openDatabase(process.env.GRIDFUN_DB_PATH || "data/gridfun.db");
 try {
+  if (database.backup)
+    console.log(
+      `Pre-migration backup: ${database.backup.path} sha256=${database.backup.sha256}`,
+    );
   if (action === "seed-dev") seedDevelopmentSample(database.raw);
   console.log(
     action === "migrate" ? "Migrations applied" : "Development sample seeded",

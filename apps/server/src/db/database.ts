@@ -1,8 +1,9 @@
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema.js";
+import { createConsistentBackup } from "./backup.js";
 
 const migrations = [
   {
@@ -78,6 +79,7 @@ CREATE INDEX asset_transactions_user_created ON asset_transactions(user_id, crea
 ] as const;
 
 export function openDatabase(path: string) {
+  const existingFile = path !== ":memory:" && existsSync(path);
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
   const raw = new Database(path);
   try {
@@ -85,6 +87,22 @@ export function openDatabase(path: string) {
     raw.pragma("synchronous = FULL");
     raw.pragma("foreign_keys = ON");
     raw.pragma("busy_timeout = 5000");
+    const hasMigrationTable = raw
+      .prepare(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='schema_migrations'",
+      )
+      .get();
+    const pending = migrations.filter(
+      (migration) =>
+        !hasMigrationTable ||
+        !raw
+          .prepare("SELECT 1 FROM schema_migrations WHERE id = ?")
+          .get(migration.id),
+    );
+    const backup =
+      existingFile && pending.length > 0
+        ? createConsistentBackup(raw, path)
+        : null;
     raw.exec(
       "CREATE TABLE IF NOT EXISTS schema_migrations (id TEXT PRIMARY KEY, applied_at INTEGER NOT NULL)",
     );
@@ -94,13 +112,8 @@ export function openDatabase(path: string) {
         .prepare("INSERT INTO schema_migrations(id, applied_at) VALUES (?, ?)")
         .run(id, Date.now());
     });
-    for (const migration of migrations) {
-      const exists = raw
-        .prepare("SELECT 1 FROM schema_migrations WHERE id = ?")
-        .get(migration.id);
-      if (!exists) apply(migration.id, migration.sql);
-    }
-    return { raw, orm: drizzle(raw, { schema }) };
+    for (const migration of pending) apply(migration.id, migration.sql);
+    return { raw, orm: drizzle(raw, { schema }), backup };
   } catch (error) {
     raw.close();
     throw error;
