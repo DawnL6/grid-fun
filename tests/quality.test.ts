@@ -176,3 +176,39 @@ describe("expanded large-board batches", () => {
     },
   );
 });
+
+describe("rare-size yield probe", () => {
+  it.each([8, 10] as const)("measures %ix%i over 5000 attempts", (size) => {
+    let seed = 20261126 + size;
+    const random = () => {
+      seed = (1664525 * seed + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    const started = Date.now();
+    const report = generateValidated({
+      size,
+      maxAttempts: 5000,
+      deadlineMs: started + 30000,
+      now: Date.now,
+      random,
+    });
+    expect(
+      report.accepted.length +
+        report.rejectedMultiple +
+        report.rejectedNoSolution +
+        report.rejectedDuplicate +
+        report.rejectedBudget,
+    ).toBe(report.attempted);
+    console.info(
+      `S01-11 rare ${size}x${size}`,
+      JSON.stringify({
+        attempted: report.attempted,
+        accepted: report.accepted.length,
+        multiple: report.rejectedMultiple,
+        duplicate: report.rejectedDuplicate,
+        budget: report.rejectedBudget,
+        elapsedMs: Date.now() - started,
+      }),
+    );
+  });
+});
