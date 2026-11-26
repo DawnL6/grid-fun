@@ -13,15 +13,21 @@ export default ts.config(
       "vue/multi-word-component-names": "off",
       "vue/singleline-html-element-content-newline": "off",
       "vue/max-attributes-per-line": "off",
+      "vue/html-closing-bracket-newline": "off",
+      "vue/html-indent": "off",
+      "vue/multiline-html-element-content-newline": "off",
     },
   },
   {
-    files: ["**/*.ts", "**/*.cjs"],
+    files: ["**/*.ts", "**/*.cjs", "**/*.vue"],
     languageOptions: {
       globals: {
         process: "readonly",
         console: "readonly",
         require: "readonly",
+        uni: "readonly",
+        setTimeout: "readonly",
+        TouchEvent: "readonly",
       },
     },
   },
