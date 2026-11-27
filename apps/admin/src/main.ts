@@ -1,16 +1,63 @@
 import { createApp } from "vue";
-import ElementPlus from "element-plus";
+import {
+  ElAlert,
+  ElAside,
+  ElButton,
+  ElCard,
+  ElContainer,
+  ElForm,
+  ElFormItem,
+  ElHeader,
+  ElInput,
+  ElMain,
+  ElOption,
+  ElPagination,
+  ElSelect,
+  ElTable,
+  ElTableColumn,
+} from "element-plus";
 import "element-plus/dist/index.css";
 import App from "./App.vue";
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "./views/Home.vue";
-import Levels from "./views/Levels.vue";
+import { createPinia } from "pinia";
+import { useAuthStore } from "./auth";
+import { setUnauthorizedHandler } from "./api";
+const pinia = createPinia();
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: Home },
-    { path: "/levels", component: Levels },
-    { path: "/login", component: Home },
+    { path: "/", component: () => import("./views/Home.vue") },
+    { path: "/levels", component: () => import("./views/Levels.vue") },
+    { path: "/login", component: () => import("./views/Login.vue") },
+    { path: "/:pathMatch(.*)*", redirect: "/" },
   ],
 });
-createApp(App).use(ElementPlus).use(router).mount("#app");
+setUnauthorizedHandler(() => {
+  useAuthStore(pinia).clear();
+  router.replace("/login");
+});
+router.beforeEach((to) => {
+  const auth = useAuthStore(pinia);
+  if (to.path === "/login") return auth.authenticated() ? "/" : true;
+  return auth.authenticated() ? true : "/login";
+});
+const app = createApp(App).use(pinia).use(router);
+for (const component of [
+  ElAlert,
+  ElAside,
+  ElButton,
+  ElCard,
+  ElContainer,
+  ElForm,
+  ElFormItem,
+  ElHeader,
+  ElInput,
+  ElMain,
+  ElOption,
+  ElPagination,
+  ElSelect,
+  ElTable,
+  ElTableColumn,
+])
+  app.use(component);
+app.mount("#app");

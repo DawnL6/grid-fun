@@ -1,67 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import axios from "axios";
 import { useRouter, RouterView, RouterLink } from "vue-router";
+import { useAuthStore } from "./auth";
 const router = useRouter();
-const token = ref("");
-const username = ref("");
-const password = ref("");
-const error = ref("");
-const busy = ref(false);
-async function login() {
-  busy.value = true;
-  error.value = "";
-  try {
-    const response = await axios.post("/api/v1/admin/auth/login", {
-      username: username.value,
-      password: password.value,
-    });
-    token.value = response.data.token;
-    password.value = "";
-    await router.push("/");
-  } catch {
-    error.value = "登录失败，请检查账号或密码。";
-  } finally {
-    busy.value = false;
-  }
-}
+const auth = useAuthStore();
 async function logout() {
   try {
-    await axios.post("/api/v1/admin/auth/logout", null, {
-      headers: { Authorization: `Bearer ${token.value}` },
-    });
+    await auth.logout();
   } finally {
-    token.value = "";
-    await router.push("/login");
+    await router.replace("/login");
   }
 }
-onMounted(() => {
-  if (!token.value) router.replace("/login");
-});
 </script>
 <template>
-  <main v-if="!token" class="login-wrap">
-    <el-card class="login-card">
-      <h1>格有趣 · 管理后台</h1>
-      <p>请使用管理员账号登录</p>
-      <el-form @submit.prevent="login">
-        <el-form-item label="账号"
-          ><el-input v-model="username" autocomplete="username"
-        /></el-form-item>
-        <el-form-item label="密码"
-          ><el-input
-            v-model="password"
-            type="password"
-            show-password
-            autocomplete="current-password"
-        /></el-form-item>
-        <el-alert v-if="error" :title="error" type="error" :closable="false" />
-        <el-button type="primary" native-type="submit" :loading="busy"
-          >登录</el-button
-        >
-      </el-form>
-    </el-card>
-  </main>
+  <RouterView v-if="$route.path === '/login'" />
   <el-container v-else class="shell">
     <el-aside width="220px" class="sidebar">
       <h2>格有趣</h2>
@@ -72,7 +23,7 @@ onMounted(() => {
     </el-aside>
     <el-container>
       <el-header class="header"
-        ><span>管理后台 · 工程预览</span
+        ><span>管理后台 · {{ auth.admin?.username }}</span
         ><el-button text @click="logout">退出登录</el-button></el-header
       >
       <el-main><RouterView /></el-main>
@@ -80,25 +31,6 @@ onMounted(() => {
   </el-container>
 </template>
 <style scoped>
-.login-wrap {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background: #f1f5ef;
-}
-.login-card {
-  width: min(420px, calc(100vw - 32px));
-}
-.login-card h1 {
-  margin: 0 0 8px;
-}
-.login-card p {
-  color: #647067;
-}
-.login-card .el-button {
-  width: 100%;
-  margin-top: 16px;
-}
 .shell {
   min-height: 100vh;
 }
