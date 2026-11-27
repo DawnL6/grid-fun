@@ -18,7 +18,8 @@ async function logout() {
       <h2>格有趣</h2>
       <nav>
         <RouterLink to="/">概览</RouterLink
-        ><RouterLink to="/levels">关卡资源库</RouterLink>
+        ><RouterLink to="/levels">关卡资源库</RouterLink
+        ><RouterLink to="/templates">关卡模板</RouterLink>
       </nav>
     </el-aside>
     <el-container>
