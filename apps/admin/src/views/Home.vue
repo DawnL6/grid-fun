@@ -1,0 +1,9 @@
+<template>
+  <h1>概览</h1>
+  <el-alert
+    title="业务数据尚未接入"
+    description="当前仅验证管理员登录和后台导航；统计将在后续模块接入。"
+    type="info"
+    :closable="false"
+  />
+</template>
