@@ -9,24 +9,28 @@ const adminSchema = {
   properties: { id: { type: "string" }, username: { type: "string" } },
 } as const;
 
+export function requireAdmin(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  database: Database.Database,
+) {
+  const header = request.headers.authorization;
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : "";
+  const session = findAdminSession(database, token);
+  if (!session)
+    reply.code(401).send({
+      code: "UNAUTHENTICATED",
+      message: "Authentication required",
+      requestId: request.id,
+    });
+  return session;
+}
+
 export function registerAdminRoutes(
   app: FastifyInstance,
   database: Database.Database,
 ) {
   const failedLogins = new Map<string, { count: number; until: number }>();
-  function authenticate(request: FastifyRequest, reply: FastifyReply) {
-    const header = request.headers.authorization;
-    const token = header?.startsWith("Bearer ") ? header.slice(7) : "";
-    const session = findAdminSession(database, token);
-    if (!session)
-      reply.code(401).send({
-        code: "UNAUTHENTICATED",
-        message: "Authentication required",
-        requestId: request.id,
-      });
-    return session;
-  }
-
   app.post<{ Body: { username: string; password: string } }>(
     "/api/v1/admin/auth/login",
     {
@@ -90,7 +94,7 @@ export function registerAdminRoutes(
     "/api/v1/admin/auth/me",
     { schema: { tags: ["admin-auth"], response: { 200: adminSchema } } },
     async (request, reply) => {
-      const session = authenticate(request, reply);
+      const session = requireAdmin(request, reply, database);
       if (!session) return reply;
       return session.admin;
     },
@@ -100,7 +104,7 @@ export function registerAdminRoutes(
     "/api/v1/admin/auth/logout",
     { schema: { tags: ["admin-auth"], response: { 204: { type: "null" } } } },
     async (request, reply) => {
-      const session = authenticate(request, reply);
+      const session = requireAdmin(request, reply, database);
       if (!session) return reply;
       revokeAdminSession(database, session.sessionId);
       return reply.code(204).send();

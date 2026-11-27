@@ -4,6 +4,7 @@ import type { FastifyError } from "fastify";
 import swagger from "@fastify/swagger";
 import type Database from "better-sqlite3";
 import { registerAdminRoutes } from "./auth/routes.js";
+import { registerLevelRoutes } from "./levels/routes.js";
 
 const errorSchema = {
   type: "object",
@@ -94,6 +95,9 @@ export async function buildApp(options: { database?: Database.Database } = {}) {
   app.get("/api/v1/openapi.json", { schema: { hide: true } }, async () =>
     app.swagger(),
   );
-  if (options.database) registerAdminRoutes(app, options.database);
+  if (options.database) {
+    registerAdminRoutes(app, options.database);
+    registerLevelRoutes(app, options.database);
+  }
   return app;
 }
