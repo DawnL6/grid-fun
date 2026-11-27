@@ -6,10 +6,12 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",
     "db:migrate": "node dist/db/cli.js migrate",
-    "db:seed:dev": "node dist/db/cli.js seed-dev"
+    "db:seed:dev": "node dist/db/cli.js seed-dev",
+    "db:admin:create": "node dist/db/cli.js admin-create"
   },
   "dependencies": {
     "@fastify/swagger": "^9",
+    "argon2": "^0.45.2",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.44.7",
     "fastify": "^5.6.2"

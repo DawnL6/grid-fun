@@ -64,7 +64,8 @@ declare const uni: {
 };
 const SAVE_KEY = "gridfun:probe-save:v1";
 const BEST_KEY = "gridfun:sample-best:v1";
-const TUTORIAL_KEY = "gridfun:tutorial-complete:v1";
+const TUTORIAL_KEY = "gridfun:tutorial-complete:v2";
+const TUTORIAL_SEEN_KEY = "gridfun:tutorial-seen:v2";
 const tutorialSteps = [
   { instruction: "点击第一行第三格，放下一颗星。", action: "target", index: 2 },
   {
@@ -196,12 +197,13 @@ function beginTutorial() {
   tutorialMessage.value = "";
   tutorialStep.value = 0;
 }
-function endTutorial() {
+function endTutorial(completed: boolean) {
   tutorialStep.value = -1;
   tutorialMessage.value = "";
   showAuto.value = true;
   resetAttempt();
-  uni.setStorageSync(TUTORIAL_KEY, true);
+  uni.setStorageSync(TUTORIAL_SEEN_KEY, true);
+  if (completed) uni.setStorageSync(TUTORIAL_KEY, true);
 }
 function tutorialUndo() {
   if (tutorial.value && tutorialSteps[tutorialStep.value]?.action !== "undo") {
@@ -229,7 +231,11 @@ onMounted(() => {
   )
     bestStars.value = best;
   restoreLocal();
-  if (uni.getStorageSync(TUTORIAL_KEY) !== true) beginTutorial();
+  if (
+    uni.getStorageSync(TUTORIAL_KEY) !== true &&
+    uni.getStorageSync(TUTORIAL_SEEN_KEY) !== true
+  )
+    beginTutorial();
   timer = setInterval(() => {
     if (!paused.value) nowMs.value = Date.now();
   }, 250);
@@ -390,10 +396,10 @@ function select(index: number) {
       <view
         v-if="tutorialStep >= tutorialSteps.length"
         class="button active"
-        @tap="endTutorial"
+        @tap="endTutorial(true)"
         >开始独立挑战</view
       >
-      <view class="button" @tap="endTutorial">跳过教学</view>
+      <view class="button" @tap="endTutorial(false)">跳过教学</view>
     </view>
     <view v-else class="toolbar">
       <view class="button" @tap="beginTutorial">新手教学</view>

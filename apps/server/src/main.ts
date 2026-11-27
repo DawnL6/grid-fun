@@ -1,10 +1,8 @@
 import { buildApp } from "./app.js";
 import { openDatabase } from "./db/database.js";
-buildApp()
+const database = openDatabase(process.env.GRIDFUN_DB_PATH || "data/gridfun.db");
+buildApp({ database: database.raw })
   .then((app) => {
-    const database = openDatabase(
-      process.env.GRIDFUN_DB_PATH || "data/gridfun.db",
-    );
     if (database.backup)
       app.log.info(
         { backup: database.backup },
@@ -17,6 +15,7 @@ buildApp()
     });
   })
   .catch((error: unknown) => {
+    if (database.raw.open) database.raw.close();
     console.error(error);
     process.exit(1);
   });

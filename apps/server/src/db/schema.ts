@@ -16,6 +16,34 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const adminUsers = sqliteTable("admin_users", {
+  id: text("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  status: text("status", { enum: ["active", "disabled"] }).notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
+export const adminSessions = sqliteTable("admin_sessions", {
+  id: text("id").primaryKey(),
+  adminId: text("admin_id")
+    .notNull()
+    .references(() => adminUsers.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at").notNull(),
+  revokedAt: integer("revoked_at"),
+});
+
+export const userSessions = sqliteTable("user_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at").notNull(),
+  revokedAt: integer("revoked_at"),
+});
+
 export const levels = sqliteTable(
   "levels",
   {

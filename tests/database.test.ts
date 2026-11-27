@@ -40,7 +40,7 @@ describe("SQLite foundation", () => {
         reopened.raw
           .prepare("SELECT COUNT(*) AS count FROM schema_migrations")
           .get(),
-      ).toMatchObject({ count: 1 });
+      ).toMatchObject({ count: 2 });
       expect(
         reopened.raw.prepare("SELECT COUNT(*) AS count FROM levels").get(),
       ).toMatchObject({ count: 1 });
@@ -110,6 +110,48 @@ describe("SQLite foundation", () => {
       if (previous === undefined) delete process.env.NODE_ENV;
       else process.env.NODE_ENV = previous;
       raw.close();
+    }
+  });
+
+  it("upgrades a prior core database after a verified backup", () => {
+    const dir = mkdtempSync(join(tmpdir(), "gridfun-auth-upgrade-"));
+    const path = join(dir, "game.db");
+    try {
+      const old = openDatabase(path);
+      old.raw
+        .prepare(
+          "INSERT INTO users(id,player_code,status,created_at) VALUES ('u1','GF1','active',1)",
+        )
+        .run();
+      old.raw.exec(
+        "DROP TABLE admin_sessions; DROP TABLE user_sessions; DROP TABLE admin_users; DELETE FROM schema_migrations WHERE id='0002_auth_sessions';",
+      );
+      old.raw.close();
+      const upgraded = openDatabase(path);
+      try {
+        expect(upgraded.backup).not.toBeNull();
+        expect(
+          upgraded.raw
+            .prepare("SELECT player_code FROM users WHERE id='u1'")
+            .get(),
+        ).toMatchObject({ player_code: "GF1" });
+        expect(
+          upgraded.raw
+            .prepare("SELECT COUNT(*) AS count FROM schema_migrations")
+            .get(),
+        ).toMatchObject({ count: 2 });
+        expect(
+          upgraded.raw
+            .prepare(
+              "SELECT name FROM sqlite_master WHERE name='admin_sessions'",
+            )
+            .get(),
+        ).toBeDefined();
+      } finally {
+        upgraded.raw.close();
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

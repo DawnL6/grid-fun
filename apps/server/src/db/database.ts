@@ -76,6 +76,25 @@ CREATE TABLE asset_transactions (
 CREATE INDEX asset_transactions_user_created ON asset_transactions(user_id, created_at);
 `,
   },
+  {
+    id: "0002_auth_sessions",
+    sql: `
+CREATE TABLE admin_users (
+  id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('active','disabled')), created_at INTEGER NOT NULL
+);
+CREATE TABLE admin_sessions (
+  id TEXT PRIMARY KEY, admin_id TEXT NOT NULL REFERENCES admin_users(id),
+  token_hash TEXT NOT NULL UNIQUE, expires_at INTEGER NOT NULL, revoked_at INTEGER
+);
+CREATE INDEX admin_sessions_admin_expiry ON admin_sessions(admin_id, expires_at);
+CREATE TABLE user_sessions (
+  id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id),
+  token_hash TEXT NOT NULL UNIQUE, expires_at INTEGER NOT NULL, revoked_at INTEGER
+);
+CREATE INDEX user_sessions_user_expiry ON user_sessions(user_id, expires_at);
+`,
+  },
 ] as const;
 
 export function openDatabase(path: string) {

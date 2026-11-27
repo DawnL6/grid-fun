@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
 import type { FastifyError } from "fastify";
 import swagger from "@fastify/swagger";
+import type Database from "better-sqlite3";
+import { registerAdminRoutes } from "./auth/routes.js";
 
 const errorSchema = {
   type: "object",
@@ -36,7 +38,7 @@ const healthSchema = {
   },
 } as const;
 
-export async function buildApp() {
+export async function buildApp(options: { database?: Database.Database } = {}) {
   const app = Fastify({
     logger: {
       redact: [
@@ -92,5 +94,6 @@ export async function buildApp() {
   app.get("/api/v1/openapi.json", { schema: { hide: true } }, async () =>
     app.swagger(),
   );
+  if (options.database) registerAdminRoutes(app, options.database);
   return app;
 }
