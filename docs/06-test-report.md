@@ -106,3 +106,5 @@
 2026-11-27：模板版本模块：`yarn lint`、`yarn typecheck`、`yarn build:server`退出0；数据库/备份2文件5项测试通过。内存库接口串联验证创建201、更新200、旧版本更新409、版本历史2条及版本记录不可修改；本地开发库运行第四版迁移退出0，4条迁移记录完整，`integrity_check=ok`，迁移前备份位于`apps/server/data/backups/`。首次`yarn format:check`发现服务端接口及进度表格式问题，已用Prettier修正后复查。未进行浏览器界面验收；按用户约定未运行admin构建或后台页面单测。
 
 2026-11-27：本地开发管理员凭据更新后，Argon2id校验通过、活动旧会话为0；本地API启动于127.0.0.1:3000，新凭据实际登录返回200及管理员身份。后台模板页改动后首次`yarn lint`因属性顺序警告退出1，修正后`yarn lint`及`yarn typecheck`均退出0。8080开发服务仍在运行；模板页浏览器操作尚未人工验收，按用户约定未运行admin构建或后台页面单测。
+
+2026-11-27：后台关卡列表改动后`yarn lint`、`yarn typecheck`、`yarn format:check`及`git diff --check`均退出0；127.0.0.1:8080/levels返回开发页HTML，本地API在127.0.0.1:3000监听。创建、筛选及详情点击操作仍待浏览器人工验收；未运行admin构建或后台页面单测。
