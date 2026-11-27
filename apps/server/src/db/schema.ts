@@ -24,6 +24,15 @@ export const adminUsers = sqliteTable("admin_users", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const levelTemplates = sqliteTable("level_templates", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  configJson: text("config_json").notNull(),
+  version: integer("version").notNull(),
+  status: text("status", { enum: ["draft", "active", "archived"] }).notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
 export const adminSessions = sqliteTable("admin_sessions", {
   id: text("id").primaryKey(),
   adminId: text("admin_id")

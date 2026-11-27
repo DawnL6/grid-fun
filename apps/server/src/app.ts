@@ -5,6 +5,7 @@ import swagger from "@fastify/swagger";
 import type Database from "better-sqlite3";
 import { registerAdminRoutes } from "./auth/routes.js";
 import { registerLevelRoutes } from "./levels/routes.js";
+import { registerTemplateRoutes } from "./levels/templates.js";
 
 const errorSchema = {
   type: "object",
@@ -98,6 +99,7 @@ export async function buildApp(options: { database?: Database.Database } = {}) {
   if (options.database) {
     registerAdminRoutes(app, options.database);
     registerLevelRoutes(app, options.database);
+    registerTemplateRoutes(app, options.database);
   }
   return app;
 }

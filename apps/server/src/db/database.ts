@@ -95,6 +95,19 @@ CREATE TABLE user_sessions (
 CREATE INDEX user_sessions_user_expiry ON user_sessions(user_id, expires_at);
 `,
   },
+  {
+    id: "0003_level_templates",
+    sql: `
+CREATE TABLE level_templates (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
+  config_json TEXT NOT NULL CHECK(json_valid(config_json)),
+  version INTEGER NOT NULL CHECK(version > 0),
+  status TEXT NOT NULL CHECK(status IN ('draft','active','archived')),
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX level_templates_status_created ON level_templates(status, created_at);
+`,
+  },
 ] as const;
 
 export function openDatabase(path: string) {
