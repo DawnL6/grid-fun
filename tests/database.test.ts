@@ -40,7 +40,7 @@ describe("SQLite foundation", () => {
         reopened.raw
           .prepare("SELECT COUNT(*) AS count FROM schema_migrations")
           .get(),
-      ).toMatchObject({ count: 3 });
+      ).toMatchObject({ count: 4 });
       expect(
         reopened.raw.prepare("SELECT COUNT(*) AS count FROM levels").get(),
       ).toMatchObject({ count: 1 });
@@ -139,7 +139,7 @@ describe("SQLite foundation", () => {
           upgraded.raw
             .prepare("SELECT COUNT(*) AS count FROM schema_migrations")
             .get(),
-        ).toMatchObject({ count: 3 });
+        ).toMatchObject({ count: 4 });
         expect(
           upgraded.raw
             .prepare(

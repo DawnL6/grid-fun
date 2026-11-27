@@ -108,6 +108,25 @@ CREATE TABLE level_templates (
 CREATE INDEX level_templates_status_created ON level_templates(status, created_at);
 `,
   },
+  {
+    id: "0004_level_template_versions",
+    sql: `
+CREATE TABLE level_template_versions (
+  template_id TEXT NOT NULL REFERENCES level_templates(id),
+  version INTEGER NOT NULL CHECK(version > 0),
+  name TEXT NOT NULL,
+  config_json TEXT NOT NULL CHECK(json_valid(config_json)),
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY(template_id,version)
+);
+INSERT INTO level_template_versions(template_id,version,name,config_json,created_at)
+SELECT id,version,name,config_json,created_at FROM level_templates;
+CREATE TRIGGER level_template_versions_no_update BEFORE UPDATE ON level_template_versions
+BEGIN SELECT RAISE(ABORT,'template version immutable'); END;
+CREATE TRIGGER level_template_versions_no_delete BEFORE DELETE ON level_template_versions
+BEGIN SELECT RAISE(ABORT,'template version immutable'); END;
+`,
+  },
 ] as const;
 
 export function openDatabase(path: string) {

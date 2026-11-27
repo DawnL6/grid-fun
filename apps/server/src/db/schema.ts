@@ -33,6 +33,20 @@ export const levelTemplates = sqliteTable("level_templates", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const levelTemplateVersions = sqliteTable(
+  "level_template_versions",
+  {
+    templateId: text("template_id")
+      .notNull()
+      .references(() => levelTemplates.id),
+    version: integer("version").notNull(),
+    name: text("name").notNull(),
+    configJson: text("config_json").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.templateId, table.version] })],
+);
+
 export const adminSessions = sqliteTable("admin_sessions", {
   id: text("id").primaryKey(),
   adminId: text("admin_id")
