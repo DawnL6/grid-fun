@@ -10,6 +10,7 @@
     "db:admin:create": "node dist/db/cli.js admin-create"
   },
   "dependencies": {
+    "@grid-fun/core": "0.0.0",
     "@fastify/swagger": "^9",
     "argon2": "^0.45.2",
     "better-sqlite3": "^12.4.1",

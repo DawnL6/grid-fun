@@ -1,5 +1,26 @@
 {
   "name": "@grid-fun/core",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    "./board": {
+      "types": "./dist/board.d.ts",
+      "require": "./dist/board.js"
+    },
+    "./solver": {
+      "types": "./dist/solver.d.ts",
+      "require": "./dist/solver.js"
+    },
+    "./canonical": {
+      "types": "./dist/canonical.d.ts",
+      "require": "./dist/canonical.js"
+    },
+    "./evaluation": {
+      "types": "./dist/evaluation.d.ts",
+      "require": "./dist/evaluation.js"
+    }
+  }
 }

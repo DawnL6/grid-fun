@@ -17,7 +17,7 @@
     "build:h5": "yarn workspace @grid-fun/game build:h5",
     "build:mp-weixin": "yarn workspace @grid-fun/game build:mp-weixin",
     "build:admin": "yarn workspace @grid-fun/admin build",
-    "build:server": "yarn workspace @grid-fun/server build",
+    "build:server": "yarn workspace @grid-fun/core build && yarn workspace @grid-fun/server build",
     "test:compatibility": "node tests/compatibility.cjs",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",

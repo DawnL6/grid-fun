@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
 import { requireAdmin } from "../auth/routes.js";
+import { createLevelDraft, type DraftInput } from "./service.js";
 
 type LevelSummary = {
   id: string;
@@ -32,6 +33,86 @@ export function registerLevelRoutes(
   app: FastifyInstance,
   database: Database.Database,
 ) {
+  app.post<{ Body: DraftInput }>(
+    "/api/v1/admin/levels",
+    {
+      schema: {
+        tags: ["admin-levels"],
+        body: {
+          type: "object",
+          additionalProperties: false,
+          required: ["regions", "starRules"],
+          properties: {
+            regions: {
+              type: "array",
+              minItems: 4,
+              maxItems: 10,
+              items: {
+                type: "array",
+                minItems: 4,
+                maxItems: 10,
+                items: { type: "integer", minimum: 0, maximum: 9 },
+              },
+            },
+            starRules: {
+              type: "object",
+              additionalProperties: false,
+              required: ["maxStars", "ruleVersion", "starRules"],
+              properties: {
+                maxStars: { type: "integer", const: 3 },
+                ruleVersion: { type: "integer", const: 1 },
+                starRules: {
+                  type: "array",
+                  minItems: 3,
+                  maxItems: 3,
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    required: ["type", "stars"],
+                    properties: {
+                      type: {
+                        type: "string",
+                        enum: ["completion", "duration", "errorCount"],
+                      },
+                      stars: { type: "integer", const: 1 },
+                      operator: { type: "string", enum: ["lte"] },
+                      value: { type: "number", minimum: 0 },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        response: {
+          201: {
+            type: "object",
+            additionalProperties: false,
+            required: ["id", "size", "status"],
+            properties: {
+              id: { type: "string" },
+              size: { type: "integer" },
+              status: { type: "string", enum: ["draft"] },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!requireAdmin(request, reply, database)) return reply;
+      const result = createLevelDraft(database, request.body);
+      if (!result.ok)
+        return reply.code(result.status).send({
+          code: result.code,
+          message: result.message,
+          requestId: request.id,
+        });
+      return reply
+        .code(201)
+        .send({ id: result.id, size: result.size, status: "draft" });
+    },
+  );
+
   app.get<{
     Querystring: {
       keyword?: string;
@@ -156,13 +237,11 @@ export function registerLevelRoutes(
         )
         .get(request.params.id) as LevelDetail | undefined;
       if (!row)
-        return reply
-          .code(404)
-          .send({
-            code: "NOT_FOUND",
-            message: "Level not found",
-            requestId: request.id,
-          });
+        return reply.code(404).send({
+          code: "NOT_FOUND",
+          message: "Level not found",
+          requestId: request.id,
+        });
       return {
         id: row.id,
         size: row.size,
